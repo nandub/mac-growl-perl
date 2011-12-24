@@ -11,7 +11,7 @@ INSTALLATION
 To install this module type the following:
 
    perl Makefile.PL
-   sudo make
+   make
    make test
    sudo make install
 
