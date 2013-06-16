@@ -3,7 +3,7 @@ package Mac::Growl;
 use strict;
 use warnings;
 
-our $VERSION = '0.67';
+our $VERSION = '0.68';
 
 use base 'Exporter';
 our @EXPORT = qw();

@@ -6,13 +6,13 @@ use File::Spec::Functions;
 use Getopt::Long;
 
 my $opt = {};
-GetOptions($opt, 'growlhelperapp=s');
+GetOptions($opt, 'growl=s');
 
-my $REQUIRED = '0.6.0';
+my $REQUIRED = '1.3.0';
 my $GHA;
 
-if ($opt->{growlhelperapp}) {
-	$GHA = $opt->{growlhelperapp};
+if ($opt->{growl}) {
+	$GHA = $opt->{growl};
 } elsif (-e '/Applications/Growl.app') {
 	$GHA = '/Applications/Growl.app';
 } else {
@@ -26,13 +26,13 @@ WriteMakefile(
 	NAME		=> 'Mac::Growl',
 	VERSION_FROM	=> 'lib/Mac/Growl.pm',
 	clean		=> {
-		'FILES'		=> 'Mac-Growl-* .makeglue'
+		'FILES'		=> 'Mac-Growl-*'
 	},
 	NO_META		=> 1,
 );
 
 sub checkversion {
-	my $info = catfile($GHA, updir(), updir(), qw(Info.plist));
+	my $info = catfile($GHA, "Contents", qw(Info.plist));
 
 	my $fh;
 	unless (open($fh, '<', $info)) {
@@ -64,51 +64,4 @@ sub checkversion {
 	}
 
 	return 1;
-}
-
-
-sub findbin {
-	my($name) = @_;
-	chomp(my $path = `which $name`);
-	if (!$path || $path =~ /\bno gluemac\b/) {
-		my @paths = qw(/usr/local/bin /System/Library/Perl/Extras/bin /sw/bin /usr/bin);
-		for (@paths) {
-			my $test = catfile($_, $name);
-			if (-e $test) {
-				$path = $test;
-				last;
-			}
-		}
-	}
-	return $path;
-}
-
-
-sub MY::postamble {
-	return '' unless -e $GHA && $goodversion;
-
-	eval { require Mac::Glue };
-
-	if ($Mac::Glue::VERSION && $Mac::Glue::VERSION < 1.24) {
-		return <<"MAKE_FRAG";
-.makeglue:
-	@\$(ECHO) "Copying glue files to $Mac::Glue::Common::MACGLUEDIR"
-	@\$(CP) 'lib/Mac/Glue/glues/GrowlHelperApp' 'lib/Mac/Glue/glues/GrowlHelperApp.pod' '$Mac::Glue::Common::MACGLUEDIR'
-	@\$(TOUCH) .makeglue
-
-all :: .makeglue
-
-MAKE_FRAG
-	} else {
-		my $path = findbin('gluemac') or return '';
-
-		return <<"MAKE_FRAG";
-.makeglue:
-	@\$(PERL) '$path' -I '$GHA'
-	@\$(TOUCH) .makeglue
-
-all :: .makeglue
-
-MAKE_FRAG
-	}
 }
